@@ -1,0 +1,22 @@
+{
+  "name": "knapsack-solver",
+  "version": "0.0.0",
+  "description": "Solves 0-1 knapsack problem with different methods",
+  "main": "batoh.js",
+  "dependencies": {
+    "line-by-line": "~0.1.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gregy/knapsack-solver.git"
+  },
+  "author": "Petr Gregor <Gregy>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gregy/knapsack-solver/issues"
+  }
+}
