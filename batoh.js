@@ -3,6 +3,8 @@
 var LineByLineReader = require('line-by-line');
 var SHOWRAWRESULTS= false;
 var COMPUTERELATIVEERRORS= true;
+var REPEATS= 100;
+var DONT_REPEAT = {};
 
 function loadSolveProblems(file, solvers) {
   var lr = new LineByLineReader(file);
@@ -21,10 +23,17 @@ function loadSolveProblems(file, solvers) {
     solvers.forEach(function(solver){
       var hrstart = process.hrtime();
       console.log('  '+solver.name+':');
-      var solution = solver(parseInt(linearr[0]), parseInt(linearr[2]), things);
+      var solution = null;
+      for(var i = 0; i< REPEATS; i++) {
+        solution = solver(parseInt(linearr[0]), parseInt(linearr[2]), things);
+        if(DONT_REPEAT[solver.name]) {
+          break;
+        }
+      }
       var hrend = process.hrtime(hrstart);
       console.log('   Solution:',linearr[0], things.length, solution.price, solution.weight, JSON.stringify(solution.solution));
       var time = (hrend[0] + hrend[1]/1000000000);
+      time = time / REPEATS;
       console.log('   Time:', time.toFixed(5), 's');
       data[data.length-1].resolvers[solver.name] = {time: time, price: solution.price, weight: solution.weight};
     });
@@ -245,6 +254,9 @@ function fptas05Solver(problemId, maxWeight, thingList) {
 }
 
 
+DONT_REPEAT['bruteSolver'] = true;
+DONT_REPEAT['bbSolver'] = true;
+DONT_REPEAT['dynSolver'] = true;
 
 loadSolveProblems( process.argv[2], [bruteSolver, simpleHeuristicSolver, bbSolver, dynSolver, fptas0005Solver, fptas001Solver, fptas01Solver, fptas05Solver]);
 
