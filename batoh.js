@@ -3,7 +3,8 @@
 var LineByLineReader = require('line-by-line');
 var SHOWRAWRESULTS= false;
 var COMPUTERELATIVEERRORS= true;
-var REPEATS= 100;
+var RELATIVEERRORBASE= 'dynSolver';
+var REPEATS= 10;
 var DONT_REPEAT = {};
 
 function loadSolveProblems(file, solvers) {
@@ -33,8 +34,9 @@ function loadSolveProblems(file, solvers) {
       var hrend = process.hrtime(hrstart);
       console.log('   Solution:',linearr[0], things.length, solution.price, solution.weight, JSON.stringify(solution.solution));
       var time = (hrend[0] + hrend[1]/1000000000);
-      time = time / REPEATS;
-      console.log('   Time:', time.toFixed(5), 's');
+      if(!DONT_REPEAT[solver.name])
+        time = time / REPEATS;
+      console.log('   Time:', time.toFixed(6), 's');
       data[data.length-1].resolvers[solver.name] = {time: time, price: solution.price, weight: solution.weight};
     });
     console.log(" ");
@@ -55,7 +57,7 @@ function loadSolveProblems(file, solvers) {
         var resolver = instance.resolvers[resolverName];
         times[resolverName] += resolver.time;
         if(COMPUTERELATIVEERRORS) {
-          var relativeError = (instance.resolvers['bruteSolver'].price - resolver.price)/instance.resolvers['bruteSolver'].price;
+          var relativeError = (instance.resolvers['dynSolver'].price - resolver.price)/instance.resolvers['dynSolver'].price;
           relativeErrors[resolverName].total+=relativeError;
           if(relativeErrors[resolverName].max < relativeError) {
             relativeErrors[resolverName].max = relativeError;
@@ -65,7 +67,7 @@ function loadSolveProblems(file, solvers) {
     });
     console.log("Mean runtime:");
     solvers.forEach(function(solver) {
-      console.log('  ' + solver.name+":", (times[solver.name]/data.length).toFixed(5), 's');
+      console.log('  ' + solver.name+":", (times[solver.name]/data.length).toFixed(6), 's');
     });
     if(COMPUTERELATIVEERRORS) {
       console.log("Mean relative error:");
@@ -176,14 +178,14 @@ function fptasSolver(problemId, maxWeight, thingList, desiredRelErr) {
 
 
   var globalsolution = {'solution':null, 'price':null, 'weight':null};
-  var pricesum = thingList.reduce(function(sum, thing) {
-    return sum+thing.price;
+  var pricemax = thingList.reduce(function(max, thing) {
+    return thing.price>max?thing.price:max;
   },0);
-  var junkBits = Math.ceil(Math.log(desiredRelErr*pricesum/thingList.length)/Math.log(2));
+  var junkBits = Math.ceil(Math.log(desiredRelErr*pricemax/thingList.length)/Math.log(2));
   if(junkBits < 0) {
     junkBits = 0;
   }
-  pricesum = 0;
+  var pricesum = 0;
   thingList.forEach(function(thing) {
     thing.cPrice = thing.price >> junkBits;
     pricesum+= thing.cPrice;
@@ -240,23 +242,22 @@ function fptasSolver(problemId, maxWeight, thingList, desiredRelErr) {
 function dynSolver(problemId, maxWeight, thingList) {
   return fptasSolver(problemId, maxWeight, thingList, 0);
 }
-function fptas0005Solver(problemId, maxWeight, thingList) {
-  return fptasSolver(problemId, maxWeight, thingList, 0.005);
-}
-function fptas001Solver(problemId, maxWeight, thingList) {
-  return fptasSolver(problemId, maxWeight, thingList, 0.01);
-}
 function fptas01Solver(problemId, maxWeight, thingList) {
   return fptasSolver(problemId, maxWeight, thingList, 0.1);
 }
 function fptas05Solver(problemId, maxWeight, thingList) {
   return fptasSolver(problemId, maxWeight, thingList, 0.5);
 }
+function fptas09Solver(problemId, maxWeight, thingList) {
+  return fptasSolver(problemId, maxWeight, thingList, 0.9);
+}
+function fptas1Solver(problemId, maxWeight, thingList) {
+  return fptasSolver(problemId, maxWeight, thingList, 1);
+}
 
 
 DONT_REPEAT['bruteSolver'] = true;
 DONT_REPEAT['bbSolver'] = true;
-DONT_REPEAT['dynSolver'] = true;
 
-loadSolveProblems( process.argv[2], [bruteSolver, simpleHeuristicSolver, bbSolver, dynSolver, fptas0005Solver, fptas001Solver, fptas01Solver, fptas05Solver]);
+loadSolveProblems( process.argv[2], [simpleHeuristicSolver, dynSolver, fptas01Solver, fptas05Solver, fptas09Solver, fptas1Solver]);
 
