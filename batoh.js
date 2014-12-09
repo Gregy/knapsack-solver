@@ -2,9 +2,9 @@
 "use strict";
 var LineByLineReader = require('line-by-line');
 var SHOWRAWRESULTS= false;
-var COMPUTERELATIVEERRORS= true;
+var COMPUTERELATIVEERRORS= false;
 var RELATIVEERRORBASE= 'dynSolver';
-var REPEATS= 10;
+var REPEATS= 20;
 var DONT_REPEAT = {};
 
 function loadSolveProblems(file, solvers) {
@@ -57,7 +57,7 @@ function loadSolveProblems(file, solvers) {
         var resolver = instance.resolvers[resolverName];
         times[resolverName] += resolver.time;
         if(COMPUTERELATIVEERRORS) {
-          var relativeError = (instance.resolvers['dynSolver'].price - resolver.price)/instance.resolvers['dynSolver'].price;
+          var relativeError = (instance.resolvers[RELATIVEERRORBASE].price - resolver.price)/instance.resolvers[RELATIVEERRORBASE].price;
           relativeErrors[resolverName].total+=relativeError;
           if(relativeErrors[resolverName].max < relativeError) {
             relativeErrors[resolverName].max = relativeError;
@@ -181,7 +181,7 @@ function fptasSolver(problemId, maxWeight, thingList, desiredRelErr) {
   var pricemax = thingList.reduce(function(max, thing) {
     return thing.price>max?thing.price:max;
   },0);
-  var junkBits = Math.ceil(Math.log(desiredRelErr*pricemax/thingList.length)/Math.log(2));
+  var junkBits = Math.floor(Math.log(desiredRelErr*pricemax/thingList.length)/Math.log(2));
   if(junkBits < 0) {
     junkBits = 0;
   }
@@ -257,7 +257,8 @@ function fptas1Solver(problemId, maxWeight, thingList) {
 
 
 DONT_REPEAT['bruteSolver'] = true;
-DONT_REPEAT['bbSolver'] = true;
+DONT_REPEAT['simpleHeuristicSolver'] = true;
+DONT_REPEAT['dynSolver'] = true;
 
-loadSolveProblems( process.argv[2], [simpleHeuristicSolver, dynSolver, fptas01Solver, fptas05Solver, fptas09Solver, fptas1Solver]);
+loadSolveProblems( process.argv[2], [bruteSolver]);
 
