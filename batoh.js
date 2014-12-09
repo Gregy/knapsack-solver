@@ -1,11 +1,17 @@
 #!/usr/bin/node
 "use strict";
 var LineByLineReader = require('line-by-line');
-var SHOWRAWRESULTS= false;
-var COMPUTERELATIVEERRORS= false;
-var RELATIVEERRORBASE= 'dynSolver';
-var REPEATS= 20;
-var DONT_REPEAT = {};
+var config = {};
+
+
+try {
+  config = require('./config.js');
+} catch(e) {
+  console.error(e.message);
+  console.error("Cannot load ./config.js, trying ./config.default.js");
+  config = require('./config.default.js');
+}
+
 
 function loadSolveProblems(file, solvers) {
   var lr = new LineByLineReader(file);
@@ -25,17 +31,17 @@ function loadSolveProblems(file, solvers) {
       var hrstart = process.hrtime();
       console.log('  '+solver.name+':');
       var solution = null;
-      for(var i = 0; i< REPEATS; i++) {
+      for(var i = 0; i< config.repeats; i++) {
         solution = solver(parseInt(linearr[0]), parseInt(linearr[2]), things);
-        if(DONT_REPEAT[solver.name]) {
+        if(config.dontRepeat[solver.name]) {
           break;
         }
       }
       var hrend = process.hrtime(hrstart);
       console.log('   Solution:',linearr[0], things.length, solution.price, solution.weight, JSON.stringify(solution.solution));
       var time = (hrend[0] + hrend[1]/1000000000);
-      if(!DONT_REPEAT[solver.name])
-        time = time / REPEATS;
+      if(!config.dontRepeat[solver.name])
+        time = time / config.repeats;
       console.log('   Time:', time.toFixed(6), 's');
       data[data.length-1].resolvers[solver.name] = {time: time, price: solution.price, weight: solution.weight};
     });
@@ -56,8 +62,8 @@ function loadSolveProblems(file, solvers) {
       for(var resolverName in instance.resolvers) {
         var resolver = instance.resolvers[resolverName];
         times[resolverName] += resolver.time;
-        if(COMPUTERELATIVEERRORS) {
-          var relativeError = (instance.resolvers[RELATIVEERRORBASE].price - resolver.price)/instance.resolvers[RELATIVEERRORBASE].price;
+        if(config.computeRelativeErrors) {
+          var relativeError = (instance.resolvers[config.relativeErrorBase].price - resolver.price)/instance.resolvers[config.relativeErrorBase].price;
           relativeErrors[resolverName].total+=relativeError;
           if(relativeErrors[resolverName].max < relativeError) {
             relativeErrors[resolverName].max = relativeError;
@@ -69,7 +75,7 @@ function loadSolveProblems(file, solvers) {
     solvers.forEach(function(solver) {
       console.log('  ' + solver.name+":", (times[solver.name]/data.length).toFixed(6), 's');
     });
-    if(COMPUTERELATIVEERRORS) {
+    if(config.computeRelativeErrors) {
       console.log("Mean relative error:");
       solvers.forEach(function(solver) {
         console.log('  ' + solver.name+":", (relativeErrors[solver.name].total/data.length).toFixed(5));
@@ -81,7 +87,7 @@ function loadSolveProblems(file, solvers) {
     }
     console.log("\n\n");
 
-    if(SHOWRAWRESULTS)
+    if(config.showRawResults)
       console.log(JSON.stringify(data));
   });
 }
@@ -256,9 +262,6 @@ function fptas1Solver(problemId, maxWeight, thingList) {
 }
 
 
-DONT_REPEAT['bruteSolver'] = true;
-DONT_REPEAT['simpleHeuristicSolver'] = true;
-DONT_REPEAT['dynSolver'] = true;
 
 loadSolveProblems( process.argv[2], [bruteSolver]);
 
