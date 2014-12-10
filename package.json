@@ -4,7 +4,8 @@
   "description": "Solves 0-1 knapsack problem with different methods",
   "main": "batoh.js",
   "dependencies": {
-    "line-by-line": "~0.1.3"
+    "line-by-line": "~0.1.3",
+    "rewire": "^2.1.3"
   },
   "devDependencies": {},
   "scripts": {

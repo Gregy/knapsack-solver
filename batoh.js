@@ -1,6 +1,7 @@
 #!/usr/bin/node
 "use strict";
 var LineByLineReader = require('line-by-line');
+var genSolver = require('./genetic.js');
 var config = {};
 
 
@@ -158,11 +159,12 @@ function bbSolver(problemId, maxWeight, thingList) {
       solution.push(0);
       resolve(solution, pricesofar, weightsofar);
       solution.pop();
-    }
-    if(weightsofar+thingList[position].weight <= maxWeight) {
-      solution.push(1);
-      resolve(solution, pricesofar+thingList[position].price, weightsofar + thingList[position].weight);
-      solution.pop();
+
+      if(weightsofar+thingList[position].weight <= maxWeight) {
+        solution.push(1);
+        resolve(solution, pricesofar+thingList[position].price, weightsofar + thingList[position].weight);
+        solution.pop();
+      }
     }
   }
 
@@ -263,5 +265,5 @@ function fptas1Solver(problemId, maxWeight, thingList) {
 
 
 
-loadSolveProblems( process.argv[2], [bruteSolver]);
+loadSolveProblems( process.argv[2], [dynSolver, genSolver]);
 
