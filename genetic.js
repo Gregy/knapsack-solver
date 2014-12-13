@@ -25,11 +25,18 @@ function isSolution(genome) {
 }
 
 function getFitness(genome) {
-  var genomePrice = 0;
-  for(var i=0;i<genome.length;i++) {
-    genomePrice+=genome[i]?thingList[i].price:0;
+  var genomeFitness= 0;
+  if(isSolution(genome)) {
+    for(var i=0;i<genome.length;i++) {
+      genomeFitness+=genome[i]?thingList[i].price:0;
+    }
   }
-  return isSolution(genome)?genomePrice:genomePrice-priceSum;
+  else {
+    for(var i=0;i<genome.length;i++) {
+      genomeFitness-=(genome[i]?1:0);
+    }
+  }
+  return genomeFitness;
 }
 
 function generateRandomPopulation(populationSize, specimenSize) {
@@ -47,6 +54,12 @@ function genomeToString(genome) {
   return genome.reduce(function(sum, thing) {
     return sum+(thing?'1':'0');
   },'');
+}
+function genomeToInt(genome) {
+  return genome.reduce(function(sum, thing) {
+    sum = sum<<1;
+    return thing?sum|1:sum;
+  },0);
 }
 function newGeneration(populationSize) {
   population.sort(function(a,b){ return b.fitness - a.fitness});
@@ -123,15 +136,19 @@ function writeStats(problemId, generation, label) {
   }
   var maxFitness = null;
   var meanFitness = null;
-  var fitnesses = ""
+  var fitnesses = "";
+  var specimens = "";
   for(var i=0;i<population.length;i++) {
     fitnesses+=generation+" "+population[i].fitness+"\n";
+    specimens+=generation+" "+genomeToInt(population[i].genome)+"\n";
   }
   if(generation == 0) {
     fs.writeFileSync(config.statsDirectory+"/"+problemId+"."+label+"fitness", fitnesses);
+    fs.writeFileSync(config.statsDirectory+"/"+problemId+"."+label+"specimen", specimens);
   }
   else {
     fs.appendFileSync(config.statsDirectory+"/"+problemId+"."+label+"fitness", fitnesses);
+    fs.appendFileSync(config.statsDirectory+"/"+problemId+"."+label+"specimen", specimens);
   }
 }
 
@@ -146,6 +163,8 @@ function getBest() {
 }
 
 function genSolver(problemId, maxW, thingL) {
+  var maxPopulationSize = config.maxPopulationSize * Math.pow(thingL.length, 0.9);
+  var minPopulationSize = config.minPopulationPercent * maxPopulationSize;
   population = [];
   maxWeight = maxW;
   thingList = thingL;
@@ -155,13 +174,10 @@ function genSolver(problemId, maxW, thingL) {
 
   var bestFitness = null;
   var bestFitnessSameRounds = 0;
-  generateRandomPopulation(config.maxPopulationSize, thingL.length);
+  generateRandomPopulation(maxPopulationSize, thingL.length);
   for(var generation=0;generation<config.maxGenerations;generation++) {
-    newGeneration(config.minPopulationSize);
-    if(config.statsDirectory) {
-      writeStats(problemId, generation, 'prebreed.');
-    }
-    crossBreed(config.maxPopulationSize);
+    newGeneration(minPopulationSize);
+    crossBreed(maxPopulationSize);
     if(config.statsDirectory) {
       writeStats(problemId, generation);
     }
