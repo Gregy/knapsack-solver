@@ -160,7 +160,7 @@ function bbSolver(problemId, maxWeight, thingList) {
       resolve(solution, pricesofar, weightsofar);
       solution.pop();
     }
-    if(weightsofar+thingList[position].weight <= maxWeight && pricesofar+cumulativePrices[position] > globalsolution.price) {
+    if(weightsofar+thingList[position].weight <= maxWeight && (pricesofar+cumulativePrices[position] > globalsolution.price||globalsolution.price === null)) {
       solution.push(1);
       resolve(solution, pricesofar+thingList[position].price, weightsofar + thingList[position].weight);
       solution.pop();
