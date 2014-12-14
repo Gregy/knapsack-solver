@@ -163,7 +163,7 @@ function getBest() {
 }
 
 function genSolver(problemId, maxW, thingL) {
-  var maxPopulationSize = config.maxPopulationSize * Math.pow(thingL.length, 0.9);
+  var maxPopulationSize = config.maxPopulationSize * Math.pow(thingL.length, 0.6);
   var minPopulationSize = config.minPopulationPercent * maxPopulationSize;
   population = [];
   maxWeight = maxW;
